@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "wowapi"
+version = "0.1.0"
+description = ""
+authors = ["Matt Hadley <hello@matthadley.me>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pylog = {git = "https://github.com/MattressPadley/pylog.git"}
+requests = "^2.32.3"
+
+
+[tool.poetry.group.dev.dependencies]
+python-dotenv = "^1.0.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
