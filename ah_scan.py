@@ -1,7 +1,18 @@
 from wowapi import WoWAPI
 from pymongo import MongoClient
+from pylog import get_logger
+from dotenv import load_dotenv
+
+load_dotenv()
 
 if __name__ == "__main__":
+    # Initialize logger
+    logger = get_logger("auction_scanner",
+                        local_mongo_uri="mongodb://localhost:27017",
+                        local_db_name="wow",
+                        local_collection_name="logs"
+                        )
+
     try:
         api = WoWAPI()
         
@@ -19,9 +30,9 @@ if __name__ == "__main__":
         if new_auctions:
             ts_data = [WoWAPI.add_timestamp(auction) for auction in new_auctions]
             collection.insert_many(ts_data)
-            print(f"Added {len(ts_data)} new auctions to the database.")
+            logger.info(f"Added {len(ts_data)} new auctions to the database.")
         else:
-            print("No new auctions to add.")
+            logger.info("No new auctions to add.")
 
     except Exception as e:
-        print(f"Error: {str(e)}")
+        logger.error(f"Error: {str(e)}")

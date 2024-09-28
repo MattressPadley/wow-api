@@ -26,6 +26,7 @@ class WoWAPI:
         self.access_token = self._get_access_token()
         self.region = region
         self.base_url = f"https://{region}.api.blizzard.com"
+        logger.info(f"WoWAPI initialized for region: {region}")
 
     def _get_access_token(self):
         """
@@ -39,7 +40,9 @@ class WoWAPI:
         """
         token = os.getenv("BNET_ACCESS_TOKEN")
         if not token:
+            logger.error("Blizzard API access token not found in environment variables.")
             raise Exception("Blizzard API access token not found in environment variables.")
+        logger.debug("Access token retrieved successfully")
         return token
 
     def _make_request(self, endpoint, params=None):
@@ -60,9 +63,15 @@ class WoWAPI:
             params = {}
         params['access_token'] = self.access_token
         url = f"{self.base_url}{endpoint}"
-        response = requests.get(url, params=params)
-        response.raise_for_status()
-        return response.json()
+        logger.info(f"Making API request to: {url}")
+        try:
+            response = requests.get(url, params=params)
+            response.raise_for_status()
+            logger.debug(f"API request successful: {url}")
+            return response.json()
+        except requests.HTTPError as e:
+            logger.error(f"API request failed: {url}. Error: {str(e)}")
+            raise
 
     def get_ah_commodities_data(self, namespace="dynamic-us"):
         """
@@ -74,6 +83,7 @@ class WoWAPI:
         Returns:
             dict: The auction house commodities data.
         """
+        logger.info("Retrieving auction house commodities data")
         endpoint = "/data/wow/auctions/commodities"
         params = {
             "namespace": namespace,
@@ -91,6 +101,7 @@ class WoWAPI:
         Returns:
             dict: The item data.
         """
+        logger.info(f"Retrieving data for item ID: {item_id}")
         endpoint = f"/data/wow/item/{item_id}"
         params = {
             "namespace": "static-us",
@@ -108,6 +119,7 @@ class WoWAPI:
         Returns:
             dict: The item media data.
         """
+        logger.info(f"Retrieving media for item ID: {item_id}")
         endpoint = f"/data/wow/media/item/{item_id}"
         params = {
             "namespace": "static-us",
@@ -129,6 +141,7 @@ class WoWAPI:
         Raises:
             Exception: If no items are found.
         """
+        logger.info(f"Searching for item: {item_name} (page {page})")
         endpoint = "/data/wow/search/item"
         params = {
             "namespace": "static-us",
@@ -139,8 +152,10 @@ class WoWAPI:
         }
         data = self._make_request(endpoint, params)
         if data["results"]:
+            logger.debug(f"Found {len(data['results'])} results for item: {item_name}")
             return data["results"]
         else:
+            logger.warning(f"No items found for search: {item_name}")
             raise Exception("Item not found.")
 
     @staticmethod
@@ -154,6 +169,7 @@ class WoWAPI:
         Returns:
             dict: The item data with an added timestamp.
         """
+        logger.debug("Adding timestamp to item data")
         item_data["ts"] = datetime.datetime.now(datetime.timezone.utc)
         return item_data
     

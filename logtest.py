@@ -1,13 +1,10 @@
+import os
 from pylog import get_logger
 from dotenv import load_dotenv
 from wowapi import WoWAPI
-import os
-import logging
 
 
 load_dotenv()
-
-
 
 get_logger("wowapi.WoWapi", 
             local_mongo_uri="mongodb://localhost:27017", 
