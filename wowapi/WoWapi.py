@@ -28,6 +28,20 @@ class WoWAPI:
         self.base_url = f"https://{region}.api.blizzard.com"
         logger.info(f"WoWAPI initialized for region: {region}")
 
+    @staticmethod
+    def add_timestamp(item_data):
+        """
+        Add a timestamp to item data.
+
+        Args:
+            item_data (dict): The item data to add a timestamp to.
+
+        Returns:
+            dict: The item data with an added timestamp.
+        """
+        logger.debug("Adding timestamp to item data")
+        item_data["ts"] = datetime.datetime.now(datetime.timezone.utc)
+
     def _get_access_token(self):
         """
         Retrieve the Blizzard API access token from environment variables.
@@ -73,114 +87,78 @@ class WoWAPI:
             logger.error(f"API request failed: {url}. Error: {str(e)}")
             raise
 
-    def get_ah_commodities_data(self, namespace="dynamic-us"):
-        """
-        Retrieve auction house commodities data.
-
-        Args:
-            namespace (str, optional): The namespace for the request. Defaults to "dynamic-us".
-
-        Returns:
-            dict: The auction house commodities data.
-        """
-        logger.info("Retrieving auction house commodities data")
-        endpoint = "/data/wow/auctions/commodities"
+    def _get_data(self, endpoint, namespace="static-us", locale="en_US", **extra_params):
         params = {
             "namespace": namespace,
-            "locale": "en_US",
+            "locale": locale,
+            **extra_params
         }
         return self._make_request(endpoint, params)
+
+    # Auction House
+    def get_ah_commodities_data(self):
+        return self._get_data("/data/wow/auctions/commodities", namespace="dynamic-us")
+
+    # Professions
+    def get_professions_index(self):
+        return self._get_data("/data/wow/profession/index")
+
+    def get_profession(self, profession_id):
+        return self._get_data(f"/data/wow/profession/{profession_id}")
+
+    def get_profession_media(self, profession_id):
+        return self._get_data(f"/data/wow/media/profession/{profession_id}")
+
+    def get_profession_skill_tier(self, profession_id, skill_tier_id):
+        return self._get_data(f"/data/wow/profession/{profession_id}/skill-tier/{skill_tier_id}")
+
+    # Recipes
+    def get_recipe(self, recipe_id):
+        return self._get_data(f"/data/wow/recipe/{recipe_id}")
+
+    def get_recipe_media(self, recipe_id):
+        return self._get_data(f"/data/wow/media/recipe/{recipe_id}")
+
+    # Item Classes
+    def get_item_classes_index(self):
+        return self._get_data("/data/wow/item-class/index")
+
+    def get_item_class(self, item_class_id):
+        return self._get_data(f"/data/wow/item-class/{item_class_id}")
+
+    def get_item_subclass(self, item_class_id, item_subclass_id):
+        return self._get_data(f"/data/wow/item-class/{item_class_id}/item-subclass/{item_subclass_id}")
+
+    # Item Sets
+    def get_item_sets_index(self):
+        return self._get_data("/data/wow/item-set/index")
+
+    def get_item_set(self, item_set_id):
+        return self._get_data(f"/data/wow/item-set/{item_set_id}")
+
+    # Items
+    def search_items(self, search_params, page=1):
+        return self._get_data("/data/wow/search/item", _page=page, **search_params)
 
     def get_item_data(self, item_id):
-        """
-        Retrieve data for a specific item.
-
-        Args:
-            item_id (int): The ID of the item to retrieve.
-
-        Returns:
-            dict: The item data.
-        """
-        logger.info(f"Retrieving data for item ID: {item_id}")
-        endpoint = f"/data/wow/item/{item_id}"
-        params = {
-            "namespace": "static-us",
-            "locale": "en_US",
-        }
-        return self._make_request(endpoint, params)
+        return self._get_data(f"/data/wow/item/{item_id}")
 
     def get_item_media(self, item_id):
-        """
-        Retrieve media information for a specific item.
+        return self._get_data(f"/data/wow/media/item/{item_id}")
 
-        Args:
-            item_id (int): The ID of the item to retrieve media for.
+    # Modified Crafting API
+    def get_modified_crafting_index(self):
+        return self._get_data("/data/wow/modified-crafting/index")
 
-        Returns:
-            dict: The item media data.
-        """
-        logger.info(f"Retrieving media for item ID: {item_id}")
-        endpoint = f"/data/wow/media/item/{item_id}"
-        params = {
-            "namespace": "static-us",
-            "locale": "en_US",
-        }
-        return self._make_request(endpoint, params)
+    def get_modified_crafting_category_index(self):
+        return self._get_data("/data/wow/modified-crafting/category/index")
 
-    def search_item_by_name(self, item_name, page=1):
-        """
-        Search for items by name.
+    def get_modified_crafting_category(self, category_id):
+        return self._get_data(f"/data/wow/modified-crafting/category/{category_id}")
 
-        Args:
-            item_name (str): The name of the item to search for.
-            page (int, optional): The page number for paginated results. Defaults to 1.
+    def get_modified_crafting_reagent_slot_type_index(self):
+        return self._get_data("/data/wow/modified-crafting/reagent-slot-type/index")
 
-        Returns:
-            list: A list of items matching the search criteria.
-
-        Raises:
-            Exception: If no items are found.
-        """
-        logger.info(f"Searching for item: {item_name} (page {page})")
-        endpoint = "/data/wow/search/item"
-        params = {
-            "namespace": "static-us",
-            "name.en_US": item_name,
-            "orderby": "name",
-            "_pageSize": 50,
-            "_page": page,
-        }
-        data = self._make_request(endpoint, params)
-        if data["results"]:
-            logger.debug(f"Found {len(data['results'])} results for item: {item_name}")
-            return data["results"]
-        else:
-            logger.warning(f"No items found for search: {item_name}")
-            raise Exception("Item not found.")
-
-    @staticmethod
-    def add_timestamp(item_data):
-        """
-        Add a timestamp to item data.
-
-        Args:
-            item_data (dict): The item data to add a timestamp to.
-
-        Returns:
-            dict: The item data with an added timestamp.
-        """
-        logger.debug("Adding timestamp to item data")
-        item_data["ts"] = datetime.datetime.now(datetime.timezone.utc)
-        return item_data
-    
-    @staticmethod
-    def log_test():
-        """
-        Test logging at various levels.
-        """
-        logger.info("Hello World")
-        logger.error("Hello World")
-        logger.debug("Hello World")
-        logger.warning("Hello World")
-        logger.critical("Hello World")
+    def get_modified_crafting_reagent_slot_type(self, slot_type_id):
+        return self._get_data(f"/data/wow/modified-crafting/reagent-slot-type/{slot_type_id}")
 

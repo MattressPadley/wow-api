@@ -9,6 +9,7 @@ readme = "README.md"
 python = "^3.11"
 pylog = {git = "https://github.com/MattressPadley/pylog.git"}
 requests = "^2.32.3"
+flask = "^3.0.3"
 
 
 [tool.poetry.group.dev.dependencies]
