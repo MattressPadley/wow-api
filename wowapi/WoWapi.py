@@ -137,8 +137,14 @@ class WoWAPI:
         return self._get_data(f"/data/wow/item-set/{item_set_id}")
 
     # Items
-    def search_items(self, search_params, page=1):
-        return self._get_data("/data/wow/search/item", _page=page, **search_params)
+    def search_items(self, search_term, _pagesize=100, _page=1):
+        params = {
+            "namespace": f"static-{self.region}",
+            "name.en_US": search_term,
+            "_pageSize": _pagesize,
+            "_page": _page
+        }
+        return self._make_request("/data/wow/search/item", params)
 
     def get_item_data(self, item_id):
         return self._get_data(f"/data/wow/item/{item_id}")

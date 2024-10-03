@@ -10,6 +10,7 @@ python = "^3.11"
 pylog = {git = "https://github.com/MattressPadley/pylog.git"}
 requests = "^2.32.3"
 flask = "^3.0.3"
+tdqm = "^0.0.1"
 
 
 [tool.poetry.group.dev.dependencies]
